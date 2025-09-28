@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
+import 'package:hava_durumu_uygulamasi/info_screen.dart';
 
 void main() => runApp(const HavaDurumuApp());
 
@@ -111,13 +112,32 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     'Düzce',
   ];
 
+  double? _lastTemp;
   String? secilenSehir;
   Future<WeatherModel>? havaDurumu;
 
   void selectedCity(String sehir) {
     setState(() {
-      secilenSehir = sehir;
-      havaDurumu = getWeather(sehir);
+      if (secilenSehir == sehir) {
+        // aynı şehre tekrar tıklanırsa seçimi kaldır
+        secilenSehir = null;
+        havaDurumu = null;
+        _lastTemp = null;
+      } else {
+        secilenSehir = sehir;
+        havaDurumu = getWeather(sehir);
+        // future tamamlandığında son sıcaklığı sakla
+        havaDurumu!
+            .then((model) {
+              setState(() {
+                _lastTemp = model.main?.temp;
+              });
+            })
+            .catchError((_) {
+              // hata durumunda reset veya log istersen buraya ekle
+              setState(() => _lastTemp = null);
+            });
+      }
     });
   }
 
@@ -182,13 +202,30 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     final wind = weather.wind?.speed?.toString() ?? '--';
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       children: [
-        const SizedBox(height: 8),
-        Text(
-          '$name${country.isNotEmpty ? ', $country' : ''}',
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(
+              '$name${country.isNotEmpty ? ', $country' : ''}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            TextButton.icon(
+              iconAlignment: IconAlignment.end,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => InfoScreen(sehirDetay: weather),
+                  ),
+                );
+              },
+              label: Icon(Icons.info),
+              style: TextButton.styleFrom(iconSize: 30),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         Text(
@@ -228,8 +265,24 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
 
   @override
   Widget build(BuildContext context) {
+    Color bgColor = Colors.white;
+    if (_lastTemp != null) {
+      if (_lastTemp! >= 30) {
+        bgColor = Colors.red.shade100;
+      }
+      if (_lastTemp! >= 20 && _lastTemp! < 30) {
+        bgColor = Colors.orange.shade100;
+      }
+      if (_lastTemp! >= 10 && _lastTemp! < 20) {
+        bgColor = Colors.green.shade100;
+      }
+      if (_lastTemp! < 10) {
+        bgColor = Colors.blue.shade100;
+      }
+    }
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 245, 244, 241),
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: const Text('Hava Durumu'),
         centerTitle: true,
@@ -262,15 +315,15 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                     return Text('Hata: ${snapshot.error}');
                   } else if (snapshot.hasData) {
                     final weather = snapshot.data!;
-                    if (weather.main!.temp! > 30) {
-                      // Sıcaklık 20°C veya üzerindeyse
+                    if (weather.main!.temp! >= 30) {
+                      // Sıcaklık 30°C veya üzerindeyse
                       return Container(
                         padding: const EdgeInsets.all(16.0),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color.fromARGB(255, 255, 120, 118),
-                              Color.fromARGB(255, 118, 0, 0),
+                              Color.fromARGB(255, 243, 243, 243),
+                              Color.fromARGB(255, 200, 0, 0),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -278,10 +331,10 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                           borderRadius: BorderRadius.circular(15.0),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.orange.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+                              color: Colors.red.withOpacity(0.5),
+                              spreadRadius: 5,
+                              blurRadius: 10,
+                              offset: const Offset(0, 0),
                             ),
                           ],
                         ),
@@ -295,8 +348,8 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color.fromARGB(255, 251, 213, 156),
-                              Color.fromARGB(255, 255, 132, 50),
+                              Color.fromARGB(255, 255, 255, 255),
+                              Color.fromARGB(255, 223, 89, 1),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -305,9 +358,9 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.orange.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+                              spreadRadius: 5,
+                              blurRadius: 10,
+                              offset: const Offset(0, 0),
                             ),
                           ],
                         ),
@@ -321,8 +374,8 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
-                              Color.fromARGB(255, 129, 251, 192),
-                              Color.fromARGB(255, 1, 107, 31),
+                              Color.fromARGB(255, 241, 255, 248),
+                              Color.fromARGB(255, 2, 224, 65),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -331,9 +384,9 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.green.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+                              spreadRadius: 5,
+                              blurRadius: 10,
+                              offset: const Offset(0, 0),
                             ),
                           ],
                         ),
@@ -355,9 +408,9 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.blue.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
+                              spreadRadius: 5,
+                              blurRadius: 10,
+                              offset: const Offset(0, 0),
                             ),
                           ],
                         ),
