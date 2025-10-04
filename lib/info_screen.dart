@@ -1,74 +1,86 @@
 import 'package:flutter/material.dart';
-import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
+import 'package:dio/dio.dart';
 
-class InfoScreen extends StatelessWidget {
-  final WeatherModel sehirDetay;
-  const InfoScreen({super.key, required this.sehirDetay});
+class CountryCitiesPage extends StatefulWidget {
+  final String country;
+
+  const CountryCitiesPage({super.key, required this.country});
+
+  @override
+  State<CountryCitiesPage> createState() => _CountryCitiesPageState();
+}
+
+class _CountryCitiesPageState extends State<CountryCitiesPage> {
+  List<String> cities = [];
+  bool loading = true;
+  String? error;
+
+  final Dio dio = Dio(
+    BaseOptions(
+      baseUrl: 'http://api.geonames.org/',
+      queryParameters: {
+        'username': 'demo', // kendi GeoNames username'ini buraya koy
+      },
+    ),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCities();
+  }
+
+  Future<void> fetchCities() async {
+    setState(() {
+      loading = true;
+      error = null;
+    });
+
+    try {
+      final response = await dio.get(
+        'searchJSON',
+        queryParameters: {
+          'country': widget
+              .country, // GeoNames country code değil, ülke adı istiyor olabilir
+          'featureClass': 'P', // 'P' = populated place
+          'maxRows': 100,
+          'orderby': 'population',
+        },
+      );
+
+      final data = response.data['geonames'] as List<dynamic>;
+      final fetchedCities = data
+          .map((e) => e['name'].toString())
+          .toSet()
+          .toList(); // unique
+      fetchedCities.sort();
+      setState(() {
+        cities = fetchedCities;
+        loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Şehirler alınamadı: $e';
+        loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final name = sehirDetay.name ?? '--';
-    final country = sehirDetay.sys?.country ?? '';
-    final temp = sehirDetay.main?.temp;
-    final tempStr = temp != null ? '${temp.toStringAsFixed(1)}°C' : '--';
-    final descriptionRaw =
-        (sehirDetay.weather != null && sehirDetay.weather!.isNotEmpty)
-        ? (sehirDetay.weather![0].description ?? '')
-        : '';
-    final description = descriptionRaw;
-    final humidity = sehirDetay.main?.humidity?.toString() ?? '--';
-    final wind = sehirDetay.wind?.speed?.toString() ?? '--';
-
-    Color bgColor = Colors.white;
-    bgColor = info_screen_background_color(bgColor);
-
     return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
-        title: Text(
-          name + " " + country,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 28),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange, Color.fromARGB(255, 64, 109, 255)],
-              begin: Alignment.topLeft,
-              end: Alignment.topRight,
+      appBar: AppBar(title: Text('Şehirler: ${widget.country}')),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : error != null
+          ? Center(child: Text(error!))
+          : ListView.separated(
+              itemCount: cities.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                return ListTile(title: Text(cities[index]));
+              },
             ),
-          ),
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
-        ),
-      ),
-      body: Container(
-        child: Column(
-          children: [
-            Text(tempStr),
-            Text(descriptionRaw),
-            Text(description),
-            Text(humidity),
-            Text(wind),
-          ],
-        ),
-      ),
     );
-  }
-
-  Color info_screen_background_color(Color bgColor) {
-    if (sehirDetay.main!.temp! >= 30) {
-      bgColor = Colors.red.shade100;
-    } else if (sehirDetay.main!.temp! >= 20 && sehirDetay.main!.temp! < 30) {
-      bgColor = Colors.orange.shade100;
-    } else if (sehirDetay.main!.temp! >= 10 && sehirDetay.main!.temp! < 20) {
-      bgColor = Colors.green.shade100;
-    } else {
-      bgColor = Colors.blue.shade100;
-    }
-    return bgColor;
   }
 }

@@ -2,8 +2,11 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:hava_durumu_uygulamasi/CityListScreen';
 import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
-import 'package:hava_durumu_uygulamasi/info_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'countries';
 
 void main() => runApp(const HavaDurumuApp());
 
@@ -28,104 +31,194 @@ class _HavaDurumuSayfasi extends StatefulWidget {
 }
 
 class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
-  final List<String> sehirler = [
-    'Adana',
-    'Adıyaman',
-    'Afyonkarahisar',
-    'Ağrı',
-    'Amasya',
-    'Ankara',
-    'Antalya',
-    'Artvin',
-    'Aydın',
-    'Balıkesir',
-    'Bilecik',
-    'Bingöl',
-    'Bitlis',
-    'Bolu',
-    'Burdur',
-    'Bursa',
-    'Çanakkale',
-    'Çankırı',
-    'Çorum',
-    'Denizli',
-    'Diyarbakır',
-    'Edirne',
-    'Elazığ',
-    'Erzincan',
-    'Erzurum',
-    'Eskişehir',
-    'Gaziantep',
-    'Giresun',
-    'Gümüşhane',
-    'Hakkari',
-    'Hatay',
-    'Isparta',
-    'Mersin',
-    'İstanbul',
-    'İzmir',
-    'Kars',
-    'Kastamonu',
-    'Kayseri',
-    'Kırklareli',
-    'Kırşehir',
-    'Kocaeli',
-    'Konya',
-    'Kütahya',
-    'Malatya',
-    'Manisa',
-    'Kahramanmaraş',
-    'Mardin',
-    'Muğla',
-    'Muş',
-    'Nevşehir',
-    'Niğde',
-    'Ordu',
-    'Rize',
-    'Sakarya',
-    'Samsun',
-    'Siirt',
-    'Sinop',
-    'Sivas',
-    'Tekirdağ',
-    'Tokat',
-    'Trabzon',
-    'Tunceli',
-    'Şanlıurfa',
-    'Uşak',
-    'Van',
-    'Yozgat',
-    'Zonguldak',
-    'Aksaray',
-    'Bayburt',
-    'Karaman',
-    'Kırıkkale',
-    'Batman',
-    'Şırnak',
-    'Bartın',
-    'Ardahan',
-    'Iğdır',
-    'Yalova',
-    'Karabük',
-    'Kilis',
-    'Osmaniye',
-    'Düzce',
-  ];
-
   double? _lastTemp;
-  String? secilenSehir;
+  String? secilenUlke;
   Future<WeatherModel>? havaDurumu;
 
-  void selectedCity(String sehir) {
+  Future<void> _useDeviceLocationAndSetCity(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(
+        backgroundColor: Color.fromARGB(255, 51, 51, 51),
+        content: Text(
+          'Konum alınıyor...',
+          style: TextStyle(color: Colors.amber, fontSize: 22),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          const SnackBar(
+            backgroundColor: Color.fromARGB(255, 51, 51, 51),
+            content: Text(
+              'Konum servisi kapalı. Lütfen cihaz konumunu açın.',
+              style: TextStyle(color: Colors.amber, fontSize: 22),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+        debugPrint('Location service disabled');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          messenger.hideCurrentSnackBar();
+          messenger.showSnackBar(
+            const SnackBar(
+              backgroundColor: Color.fromARGB(255, 51, 51, 51),
+              content: Text(
+                'Konum izni reddedildi. İzin verin.',
+                style: TextStyle(color: Colors.amber, fontSize: 22),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+          debugPrint('Location permission denied');
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          const SnackBar(
+            backgroundColor: Color.fromARGB(255, 51, 51, 51),
+            content: Text(
+              'Konum izni kalıcı olarak reddedildi. Ayarlardan verin.',
+              style: TextStyle(color: Colors.amber, fontSize: 22),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+        debugPrint('Location permission denied forever');
+        return;
+      }
+
+      Position? pos = await Geolocator.getLastKnownPosition();
+      pos ??= await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.low,
+        timeLimit: const Duration(seconds: 10),
+      );
+
+      debugPrint('Position: ${pos.latitude}, ${pos.longitude}');
+
+      // 1) Önce platform geocoder'ı dene
+      List<Placemark> placemarks = [];
+      try {
+        placemarks = await placemarkFromCoordinates(
+          pos.latitude,
+          pos.longitude,
+          localeIdentifier: 'tr_TR',
+        );
+        debugPrint('placemarks (platform): $placemarks');
+      } catch (e) {
+        debugPrint('placemarkFromCoordinates hata: $e');
+      }
+
+      String? city;
+      if (placemarks.isNotEmpty) {
+        final pm = placemarks.first;
+        city = pm.locality ?? pm.subAdministrativeArea ?? pm.administrativeArea;
+        debugPrint('City from placemark: $city');
+      }
+
+      // 2) Eğer platform geocoder boş döndüyse OpenWeatherMap reverse geocoding ile dene
+      if (city == null || city.isEmpty) {
+        try {
+          final apiKey = dio.options.queryParameters['appid'] as String? ?? '';
+          final resp = await Dio().get(
+            'https://api.openweathermap.org/geo/1.0/reverse',
+            queryParameters: {
+              'lat': pos.latitude,
+              'lon': pos.longitude,
+              'limit': 1,
+              'appid': apiKey,
+            },
+          );
+          debugPrint('OpenWeather reverse resp: ${resp.data}');
+          if (resp.data is List && (resp.data as List).isNotEmpty) {
+            final item = (resp.data as List).first;
+            city =
+                (item['name'] as String?) ??
+                (item['local_names'] != null
+                    ? (item['local_names']['tr'] as String?)
+                    : null) ??
+                city;
+            debugPrint('City from OpenWeather reverse: $city');
+          }
+        } catch (e) {
+          debugPrint('OpenWeather reverse geocode hata: $e');
+        }
+      }
+
+      if (city == null || city.isEmpty) {
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Konumdan şehir elde edilemedi. Ağ veya geocoder sorununu kontrol edin.',
+              style: TextStyle(color: Colors.amber, fontSize: 22),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
+        debugPrint('City still empty after both methods');
+        return;
+      }
+
+      setState(() {
+        secilenUlke = city;
+        havaDurumu = getWeather(city!); // <-- city! ile non-null olarak geçir
+      });
+
+      havaDurumu!
+          .then((model) => setState(() => _lastTemp = model.main?.temp))
+          .catchError((e) => debugPrint('Weather load error: $e'));
+
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          backgroundColor: Color.fromARGB(255, 51, 51, 51),
+          content: Text(
+            'Konum atandı: $city',
+            style: TextStyle(color: Colors.amber, fontSize: 22),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+      debugPrint('Location success, city: $city');
+    } catch (e, st) {
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        const SnackBar(
+          backgroundColor: Color.fromARGB(255, 51, 51, 51),
+          content: Text(
+            'Konum alınırken hata oluştu. Loglara bakın.',
+            style: TextStyle(color: Colors.amber, fontSize: 22),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+      debugPrint('Error getting location: $e\n$st');
+    }
+  }
+
+  void selectedCity(String ulke) {
     setState(() {
-      if (secilenSehir == sehir) {
+      if (secilenUlke == ulke) {
         // aynı şehre tekrar tıklanırsa seçimi kaldır
-        secilenSehir = null;
+        secilenUlke = null;
         havaDurumu = null;
         _lastTemp = null;
       } else {
-        secilenSehir = sehir;
-        havaDurumu = getWeather(sehir);
+        secilenUlke = ulke;
+        havaDurumu = getWeather(ulke);
         // future tamamlandığında son sıcaklığı sakla
         havaDurumu!
             .then((model) {
@@ -153,11 +246,11 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     ),
   );
 
-  Future<WeatherModel> getWeather(String secilenSehir) async {
+  Future<WeatherModel> getWeather(String secilenUlke) async {
     try {
       final response = await dio.get(
         '/weather',
-        queryParameters: {'q': secilenSehir},
+        queryParameters: {'q': secilenUlke},
       );
       var model = WeatherModel.fromJson(response.data);
       debugPrint('Weather loaded: ${model.name}');
@@ -202,40 +295,38 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     final wind = weather.wind?.speed?.toString() ?? '--';
 
     return Column(
-      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(
-              '$name${country.isNotEmpty ? ', $country' : ''}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            TextButton.icon(
-              iconAlignment: IconAlignment.end,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => InfoScreen(sehirDetay: weather),
-                  ),
-                );
-              },
-              label: Icon(Icons.info),
-              style: TextButton.styleFrom(iconSize: 30),
-            ),
-          ],
+        Text(
+          '$name${country.isNotEmpty ? ', $country' : ''}',
+          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 6),
         Text(
           tempStr,
-          style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            shadows: [
+              // glow + hafif yukarı gölge kombinasyonu
+              Shadow(
+                offset: Offset(0, 0),
+                blurRadius: 15,
+                color: Color.fromRGBO(255, 200, 0, 0.18),
+              ),
+              Shadow(
+                offset: Offset(0, 4),
+                blurRadius: 15,
+                color: Color.fromRGBO(0, 0, 0, 0.3),
+              ),
+            ],
+            fontSize: 55,
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
         ),
-        const SizedBox(height: 6),
         Text(
           description,
-          style: const TextStyle(fontSize: 18),
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 10),
@@ -246,7 +337,10 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               children: [
                 const Icon(Icons.water_drop),
                 const SizedBox(height: 4),
-                Text('Nem: $humidity%'),
+                Text(
+                  'Nem: $humidity%',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(width: 30),
@@ -254,7 +348,10 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               children: [
                 const Icon(Icons.air),
                 const SizedBox(height: 4),
-                Text('Rüzgar: $wind m/s'),
+                Text(
+                  'Rüzgar: $wind m/s',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
           ],
@@ -284,7 +381,26 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Hava Durumu'),
+        title: const Text(
+          'Weather Statement',
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.normal,
+            shadows: [
+              // glow + hafif yukarı gölge kombinasyonu
+              Shadow(
+                offset: Offset(0, 0),
+                blurRadius: 8,
+                color: Color.fromRGBO(255, 200, 0, 0.18),
+              ),
+              Shadow(
+                offset: Offset(0, 4),
+                blurRadius: 6,
+                color: Color.fromRGBO(0, 0, 0, 0.3),
+              ),
+            ],
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -305,6 +421,96 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 0),
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.search, color: Colors.white),
+                label: const Text(
+                  'Şehir ara',
+                  style: TextStyle(color: Colors.amber),
+                ),
+                style: ElevatedButton.styleFrom(
+                  elevation: 10,
+                  backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+                ),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) {
+                      String query = '';
+                      List<String> filtered = ulkeler;
+                      return StatefulBuilder(
+                        builder: (context, setModalState) {
+                          filtered = ulkeler
+                              .where(
+                                (s) => s.toLowerCase().contains(
+                                  query.toLowerCase(),
+                                ),
+                              )
+                              .toList();
+                          return Padding(
+                            padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).viewInsets.bottom,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: TextField(
+                                    autofocus: true,
+                                    decoration: const InputDecoration(
+                                      prefixIcon: Icon(Icons.search),
+                                      hintText: 'Şehir adı yazın',
+                                    ),
+                                    onChanged: (v) =>
+                                        setModalState(() => query = v),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 300,
+                                  child: filtered.isEmpty
+                                      ? const Center(
+                                          child: Text('Eşleşen şehir yok'),
+                                        )
+                                      : ListView.separated(
+                                          shrinkWrap: true,
+                                          itemCount: filtered.length,
+                                          separatorBuilder: (_, __) =>
+                                              const Divider(height: 1),
+                                          itemBuilder: (context, index) {
+                                            final city = filtered[index];
+                                            final isSel = city == secilenUlke;
+                                            return ListTile(
+                                              title: Text(city),
+                                              trailing: isSel
+                                                  ? const Icon(
+                                                      Icons.check,
+                                                      color: Colors.blue,
+                                                    )
+                                                  : null,
+                                              onTap: () {
+                                                selectedCity(city);
+                                                Navigator.of(context).pop();
+                                              },
+                                            );
+                                          },
+                                        ),
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
             if (havaDurumu != null)
               FutureBuilder<WeatherModel>(
                 future: havaDurumu,
@@ -424,7 +630,45 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                   }
                 },
               ),
-            SizedBox(height: 16.0),
+            SizedBox(height: 12.0),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.my_location, color: Colors.white),
+              style: ElevatedButton.styleFrom(
+                elevation: 6,
+                backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+              ),
+              label: Text('Konum', style: TextStyle(color: Colors.amber)),
+              onPressed: () async {
+                await _useDeviceLocationAndSetCity(context);
+              },
+            ),
+            SizedBox(height: 8.0),
+            ElevatedButton(
+              onPressed: () async {
+                if (secilenUlke != null && havaDurumu != null) {
+                  try {
+                    final weather = await havaDurumu!;
+                    final countryCode = weather.sys?.country;
+                    if (countryCode != null && countryCode.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              CityListScreen(countryCode: countryCode),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Ülke kodu alınamadı!')),
+                      );
+                    }
+                  } catch (e) {
+                    debugPrint('Hava durumu fetch error: $e');
+                  }
+                }
+              },
+              child: const Text('Şehirleri Gör'),
+            ),
 
             Expanded(
               child: GridView.builder(
@@ -435,14 +679,17 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                   childAspectRatio: 4 / 1,
                 ),
                 itemBuilder: (context, index) {
-                  final isSelected = secilenSehir == sehirler[index];
+                  final isSelected = secilenUlke == ulkeler[index];
+
                   return GestureDetector(
-                    onTap: () => selectedCity(sehirler[index]),
+                    onTap: () => selectedCity(ulkeler[index]),
                     child: Card(
-                      color: isSelected ? Colors.blueGrey : Colors.white,
+                      color: isSelected
+                          ? Colors.blueGrey
+                          : Colors.grey.shade200,
                       child: Center(
                         child: Text(
-                          sehirler[index],
+                          ulkeler[index],
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -452,7 +699,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                     ),
                   );
                 },
-                itemCount: sehirler.length,
+                itemCount: ulkeler.length,
               ),
             ),
           ],
