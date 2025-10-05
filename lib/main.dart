@@ -2,7 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:hava_durumu_uygulamasi/CityListScreen';
+import 'package:hava_durumu_uygulamasi/CityListScreen.dart';
 import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -294,69 +294,94 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     final humidity = weather.main?.humidity?.toString() ?? '--';
     final wind = weather.wind?.speed?.toString() ?? '--';
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          '$name${country.isNotEmpty ? ', $country' : ''}',
-          style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          tempStr,
-          style: const TextStyle(
-            shadows: [
-              // glow + hafif yukarı gölge kombinasyonu
-              Shadow(
-                offset: Offset(0, 0),
-                blurRadius: 15,
-                color: Color.fromRGBO(255, 200, 0, 0.18),
+    return GestureDetector(
+      onTap: () async {
+        if (secilenUlke != null && havaDurumu != null) {
+          try {
+            final weather = await havaDurumu!;
+            final countryCode = weather.sys?.country;
+            if (countryCode != null && countryCode.isNotEmpty) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      CityListScreen(countryCode: countryCode),
+                ),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Ülke kodu alınamadı!')),
+              );
+            }
+          } catch (e) {
+            debugPrint('Hava durumu fetch error: $e');
+          }
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '$name${country.isNotEmpty ? ', $country' : ''}',
+            style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            tempStr,
+            style: const TextStyle(
+              shadows: [
+                // glow + hafif yukarı gölge kombinasyonu
+                Shadow(
+                  offset: Offset(0, 0),
+                  blurRadius: 15,
+                  color: Color.fromRGBO(255, 200, 0, 0.18),
+                ),
+                Shadow(
+                  offset: Offset(0, 4),
+                  blurRadius: 15,
+                  color: Color.fromRGBO(0, 0, 0, 0.3),
+                ),
+              ],
+              fontSize: 55,
+              fontWeight: FontWeight.bold,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Column(
+                children: [
+                  const Icon(Icons.water_drop),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Nem: $humidity%',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              Shadow(
-                offset: Offset(0, 4),
-                blurRadius: 15,
-                color: Color.fromRGBO(0, 0, 0, 0.3),
+              const SizedBox(width: 30),
+              Column(
+                children: [
+                  const Icon(Icons.air),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rüzgar: $wind m/s',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ],
-            fontSize: 55,
-            fontWeight: FontWeight.bold,
-            fontStyle: FontStyle.italic,
           ),
-        ),
-        Text(
-          description,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Column(
-              children: [
-                const Icon(Icons.water_drop),
-                const SizedBox(height: 4),
-                Text(
-                  'Nem: $humidity%',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(width: 30),
-            Column(
-              children: [
-                const Icon(Icons.air),
-                const SizedBox(height: 4),
-                Text(
-                  'Rüzgar: $wind m/s',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -643,32 +668,6 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               },
             ),
             SizedBox(height: 8.0),
-            ElevatedButton(
-              onPressed: () async {
-                if (secilenUlke != null && havaDurumu != null) {
-                  try {
-                    final weather = await havaDurumu!;
-                    final countryCode = weather.sys?.country;
-                    if (countryCode != null && countryCode.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              CityListScreen(countryCode: countryCode),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Ülke kodu alınamadı!')),
-                      );
-                    }
-                  } catch (e) {
-                    debugPrint('Hava durumu fetch error: $e');
-                  }
-                }
-              },
-              child: const Text('Şehirleri Gör'),
-            ),
 
             Expanded(
               child: GridView.builder(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart'; // kendi model yoluna göre düzenle
+import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
+import 'package:hava_durumu_uygulamasi/districtListScreen.dart';
 
 class CityListScreen extends StatefulWidget {
   final String countryCode;
@@ -11,7 +12,7 @@ class CityListScreen extends StatefulWidget {
 }
 
 class _CityListScreenState extends State<CityListScreen> {
-  List<String> cities = [];
+  List<Map<String, dynamic>> cities = []; // name ve geonameId
   bool isLoading = true;
 
   String? selectedCity;
@@ -49,7 +50,9 @@ class _CityListScreenState extends State<CityListScreen> {
       );
       final data = response.data['geonames'] as List;
       setState(() {
-        cities = data.map((e) => e['name'] as String).toList();
+        cities = data
+            .map((e) => {'name': e['name'], 'geonameId': e['geonameId']})
+            .toList();
         isLoading = false;
       });
     } catch (e) {
@@ -60,7 +63,10 @@ class _CityListScreenState extends State<CityListScreen> {
 
   Future<WeatherModel> getWeather(String city) async {
     try {
-      final response = await dioWeather.get('/weather', queryParameters: {'q': city});
+      final response = await dioWeather.get(
+        '/weather',
+        queryParameters: {'q': '$city,${widget.countryCode}'},
+      );
       return WeatherModel.fromJson(response.data);
     } catch (e) {
       debugPrint('Weather fetch error: $e');
@@ -68,17 +74,11 @@ class _CityListScreenState extends State<CityListScreen> {
     }
   }
 
-  // 🌈 Sıcaklığa göre renk seçimi
   Color _getTempColor(double temp) {
-    if (temp > 30) {
-      return Colors.redAccent.shade400;
-    } else if (temp > 20) {
-      return Colors.orangeAccent.shade400;
-    } else if (temp > 10) {
-      return Colors.greenAccent.shade400;
-    } else {
-      return Colors.lightBlueAccent.shade400;
-    }
+    if (temp > 30) return Colors.redAccent.shade400;
+    if (temp > 20) return Colors.orangeAccent.shade400;
+    if (temp > 10) return Colors.greenAccent.shade400;
+    return Colors.lightBlueAccent.shade400;
   }
 
   Widget _weatherCard(WeatherModel weather) {
@@ -87,7 +87,9 @@ class _CityListScreenState extends State<CityListScreen> {
     final descRaw = (weather.weather != null && weather.weather!.isNotEmpty)
         ? weather.weather![0].description ?? ''
         : '';
-    final desc = descRaw.isEmpty ? '--' : '${descRaw[0].toUpperCase()}${descRaw.substring(1)}';
+    final desc = descRaw.isEmpty
+        ? '--'
+        : '${descRaw[0].toUpperCase()}${descRaw.substring(1)}';
     final humidity = weather.main?.humidity?.toString() ?? '--';
     final wind = weather.wind?.speed?.toString() ?? '--';
     final name = weather.name ?? '--';
@@ -104,40 +106,96 @@ class _CityListScreenState extends State<CityListScreen> {
             color: Colors.black.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(name, style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),),
-          const SizedBox(height: 6),
-          Text('$tempText°C',
-              style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold,shadows: [
-              // glow + hafif yukarı gölge kombinasyonu
-              Shadow(
-                offset: Offset(0, 0),
-                blurRadius: 15,
-                color: Color.fromRGBO(255, 200, 0, 0.18),
-              ),
-              Shadow(
-                offset: Offset(0, 4),
-                blurRadius: 15,
-                color: Color.fromRGBO(0, 0, 0, 0.3),
-              ),
-            ],)),
-          Text(desc, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(children: [const Icon(Icons.water_drop), Text('Nem: $humidity%',style: TextStyle(fontWeight: FontWeight.bold),)]),
-              const SizedBox(width: 30),
-              Column(children: [const Icon(Icons.air), Text('Rüzgar: $wind m/s',style: TextStyle(fontWeight: FontWeight.bold),)]),
-            ],
           ),
         ],
+      ),
+      child: GestureDetector(
+        onTap: () {
+          final selected = cities.firstWhere(
+            (c) => c['name'] == selectedCity,
+            orElse: () => {},
+          );
+          final geonameId = selected['geonameId'];
+          if (geonameId != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DistrictListScreen(
+                  countryCode: widget.countryCode,
+                  cityName: name,
+                  cityGeonameId: geonameId,
+                ),
+              ),
+            );
+          }
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$name',
+              style: const TextStyle(
+                fontSize: 35,
+                fontWeight: FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              temp.toString(),
+              style: const TextStyle(
+                shadows: [
+                  // glow + hafif yukarı gölge kombinasyonu
+                  Shadow(
+                    offset: Offset(0, 0),
+                    blurRadius: 15,
+                    color: Color.fromRGBO(255, 200, 0, 0.18),
+                  ),
+                  Shadow(
+                    offset: Offset(0, 4),
+                    blurRadius: 15,
+                    color: Color.fromRGBO(0, 0, 0, 0.3),
+                  ),
+                ],
+                fontSize: 55,
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            Text(
+              desc,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    const Icon(Icons.water_drop),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Nem: $humidity%',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 30),
+                Column(
+                  children: [
+                    const Icon(Icons.air),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rüzgar: $wind m/s',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -165,14 +223,12 @@ class _CityListScreenState extends State<CityListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(title: const Text('Şehirler')),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // 🌤️ Üstte Card Alanı
                 FutureBuilder<WeatherModel>(
                   future: cityWeather,
                   builder: (context, snapshot) {
@@ -188,21 +244,20 @@ class _CityListScreenState extends State<CityListScreen> {
                     }
                   },
                 ),
-
-                // 🏙️ Alt Kısım: GridView
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
                     child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // 2 sütun
-                        childAspectRatio: 2.5, // kutuların oranı
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 2.5,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
                       itemCount: cities.length,
                       itemBuilder: (context, index) {
-                        final city = cities[index];
+                        final city = cities[index]['name'] as String;
                         final isSel = city == selectedCity;
                         return GestureDetector(
                           onTap: () {
@@ -213,14 +268,16 @@ class _CityListScreenState extends State<CityListScreen> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: isSel ? Colors.blueGrey : Colors.grey.shade200,
+                              color: isSel
+                                  ? Colors.blueGrey
+                                  : Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.1),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
-                                )
+                                ),
                               ],
                             ),
                             child: Center(
