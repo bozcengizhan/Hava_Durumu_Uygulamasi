@@ -5,7 +5,7 @@ import 'package:hava_durumu_uygulamasi/Models/weatherModel.dart';
 class DistrictListScreen extends StatefulWidget {
   final String cityName;
   final String countryCode;
-  final int cityGeonameId; // CityListScreen’den geliyor
+  final int cityGeonameId;
 
   const DistrictListScreen({
     super.key,
@@ -43,38 +43,27 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
   }
 
   String cleanDistrictName(String name) {
-    name = name.trim(); // baştaki/sondaki boşlukları temizle
-
-    // 🔹 İlçeyi ifade eden kelimeler (sonda olursa sil)
+    name = name.trim();
     final suffixes = <String>[
-      ' ilçesi', // Türkçe
-      ' District', // İngilizce
-      ' Bezirk', // Almanca
-      ' arrondissement', // Fransızca
-      ' Municipio', // İspanyolca / İtalyanca
-      ' Comune', // İtalyanca
-      ' Parish', // İngilizce (özellikle Karayipler)
+      ' ilçesi',
+      ' District',
+      ' Bezirk',
+      ' arrondissement',
+      ' Municipio',
+      ' Comune',
+      ' Parish',
     ];
-
-    // 🔹 Başta olursa silinecek kelimeler
-    final prefixes = <String>[
-      'Bashkia', 'Gueltat', 'Daïra de', 'Daïra d’', // Arnavutça: Belediye
-    ];
-
-    // Başta geçen kelimeleri sil
+    final prefixes = <String>['Bashkia', 'Gueltat', 'Daïra de', 'Daïra d’'];
     for (final prefix in prefixes) {
       if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
         name = name.substring(prefix.length).trim();
       }
     }
-
-    // Sonda geçen kelimeleri sil
     for (final suffix in suffixes) {
       if (name.toLowerCase().endsWith(suffix.toLowerCase())) {
         name = name.substring(0, name.length - suffix.length).trim();
       }
     }
-
     return name;
   }
 
@@ -94,20 +83,14 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
       );
 
       final data = response.data['geonames'] as List;
-
       setState(() {
         districts = data
             .where((e) => e['fcode'] == 'ADM2' || e['fcode'] == 'PPL')
             .map((e) => cleanDistrictName(e['name'] as String))
             .toList();
 
-        // 🔹 Alfabetik sırala
         districts.sort((a, b) => a.compareTo(b));
-
-        if (districts.isEmpty) {
-          districts.add('İlçe bulunamadı');
-        }
-
+        if (districts.isEmpty) districts.add('İlçe bulunamadı');
         isLoading = false;
       });
     } catch (e) {
@@ -129,7 +112,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
       return WeatherModel.fromJson(response.data);
     } catch (e) {
       debugPrint('Weather fetch error for $district: $e');
-      return null; // hata durumunda null
+      return null;
     }
   }
 
@@ -142,7 +125,6 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
 
   Widget _weatherCard(WeatherModel weather) {
     final temp = weather.main?.temp ?? 0;
-    final tempText = temp.toStringAsFixed(1);
     final descRaw = (weather.weather != null && weather.weather!.isNotEmpty)
         ? weather.weather![0].description ?? ''
         : '';
@@ -172,7 +154,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '$name',
+            name,
             style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),
             textAlign: TextAlign.center,
           ),
@@ -212,7 +194,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Nem: $humidity%',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -223,7 +205,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Rüzgar: $wind m/s',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -255,12 +237,83 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
     );
   }
 
+  // 🔹 İlçe arama butonunu burada ekliyoruz
+  void _showDistrictSearch() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        String query = '';
+        List<String> filtered = districts;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            filtered = districts
+                .where((s) => s.toLowerCase().contains(query.toLowerCase()))
+                .toList();
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: TextField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        hintText: 'İlçe adı yazın',
+                      ),
+                      onChanged: (v) => setModalState(() => query = v),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 300,
+                    child: filtered.isEmpty
+                        ? const Center(child: Text('Eşleşen ilçe yok'))
+                        : ListView.separated(
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final district = filtered[index];
+                              final isSel = district == selectedDistrict;
+                              return ListTile(
+                                title: Text(district),
+                                trailing: isSel
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.blue,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  setState(() {
+                                    selectedDistrict = district;
+                                    districtWeather = getWeather(district);
+                                  });
+                                  Navigator.pop(context);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.cityName, // 👈 artık ülke ismi burada
+          widget.cityName,
           style: const TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.normal,
@@ -298,6 +351,22 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // 🔹 AppBar’ın altına eklenen buton
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.search, color: Colors.white),
+                    label: const Text(
+                      'İlçe ara',
+                      style: TextStyle(color: Colors.amber),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 10,
+                      backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+                    ),
+                    onPressed: _showDistrictSearch,
+                  ),
+                ),
                 FutureBuilder<WeatherModel?>(
                   key: ValueKey(selectedDistrict),
                   future: districtWeather,

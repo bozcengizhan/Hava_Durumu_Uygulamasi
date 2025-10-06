@@ -455,7 +455,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.search, color: Colors.white),
                 label: const Text(
-                  'Şehir ara',
+                  'Ülke ara',
                   style: TextStyle(color: Colors.amber),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -491,7 +491,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                                     autofocus: true,
                                     decoration: const InputDecoration(
                                       prefixIcon: Icon(Icons.search),
-                                      hintText: 'Şehir adı yazın',
+                                      hintText: 'Ülke adı yazın',
                                     ),
                                     onChanged: (v) =>
                                         setModalState(() => query = v),
@@ -501,7 +501,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                                   height: 300,
                                   child: filtered.isEmpty
                                       ? const Center(
-                                          child: Text('Eşleşen şehir yok'),
+                                          child: Text('Eşleşen ülke yok'),
                                         )
                                       : ListView.separated(
                                           shrinkWrap: true,

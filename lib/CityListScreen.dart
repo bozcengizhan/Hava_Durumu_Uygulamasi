@@ -19,6 +19,7 @@ class CityListScreen extends StatefulWidget {
 class _CityListScreenState extends State<CityListScreen> {
   List<Map<String, dynamic>> cities = []; // name ve geonameId
   bool isLoading = true;
+  double? currentTemp;
 
   String? selectedCity;
   Future<WeatherModel>? cityWeather;
@@ -62,7 +63,7 @@ class _CityListScreenState extends State<CityListScreen> {
             .map((e) => {'name': e['name'], 'geonameId': e['geonameId']})
             .toList();
 
-        // 🔹 Şehirleri alfabetik sıraya koy
+        // Şehirleri alfabetik sıraya koy
         cities.sort(
           (a, b) => (a['name'] as String).toLowerCase().compareTo(
             (b['name'] as String).toLowerCase(),
@@ -95,6 +96,13 @@ class _CityListScreenState extends State<CityListScreen> {
     if (temp > 20) return Colors.orangeAccent.shade400;
     if (temp > 10) return Colors.greenAccent.shade400;
     return Colors.lightBlueAccent.shade400;
+  }
+
+  Color _getTempColor2(double temp) {
+    if (temp > 30) return Colors.redAccent.shade100;
+    if (temp >= 20 && temp < 30) return Colors.orangeAccent.shade100;
+    if (temp >= 10 && temp < 20) return Colors.greenAccent.shade100;
+    return Colors.lightBlueAccent.shade100;
   }
 
   Widget _weatherCard(WeatherModel weather) {
@@ -158,10 +166,9 @@ class _CityListScreenState extends State<CityListScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              temp.toString(),
+              tempText,
               style: const TextStyle(
                 shadows: [
-                  // glow + hafif yukarı gölge kombinasyonu
                   Shadow(
                     offset: Offset(0, 0),
                     blurRadius: 15,
@@ -193,7 +200,7 @@ class _CityListScreenState extends State<CityListScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Nem: $humidity%',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -204,7 +211,7 @@ class _CityListScreenState extends State<CityListScreen> {
                     const SizedBox(height: 4),
                     Text(
                       'Rüzgar: $wind m/s',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -237,12 +244,89 @@ class _CityListScreenState extends State<CityListScreen> {
     );
   }
 
+  void _showCitySearchModal() {
+    String query = '';
+    List<String> filtered = cities.map((e) => e['name'] as String).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final result = filtered
+                .where((s) => s.toLowerCase().contains(query.toLowerCase()))
+                .toList();
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: TextField(
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.search),
+                        hintText: 'Şehir adı yazın',
+                      ),
+                      onChanged: (v) => setModalState(() => query = v),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 300,
+                    child: result.isEmpty
+                        ? const Center(child: Text('Eşleşen şehir yok'))
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            itemCount: result.length,
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final city = result[index];
+                              final isSel = city == selectedCity;
+                              return ListTile(
+                                title: Text(city),
+                                trailing: isSel
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.blue,
+                                      )
+                                    : null,
+                                onTap: () {
+                                  setState(() {
+                                    selectedCity = city;
+                                    cityWeather = getWeather(city);
+                                  });
+                                  Navigator.of(context).pop();
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bgColor = currentTemp != null
+        ? _getTempColor2(currentTemp!)
+        : Colors.white;
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
         title: Text(
-          widget.countryName, // 👈 artık ülke ismi burada
+          widget.countryName,
           style: const TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.normal,
@@ -281,11 +365,28 @@ class _CityListScreenState extends State<CityListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                // 🔹 AppBar altına eklenen "Şehir ara" butonu
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.search, color: Colors.white),
+                    label: const Text(
+                      'Şehir ara',
+                      style: TextStyle(color: Colors.amber),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 10,
+                      backgroundColor: const Color.fromARGB(255, 51, 51, 51),
+                    ),
+                    onPressed: _showCitySearchModal,
+                  ),
+                ),
+
                 FutureBuilder<WeatherModel>(
                   future: cityWeather,
                   builder: (context, snapshot) {
                     if (selectedCity == null) {
-                      return _defaultCard(); // Eğer seçim yoksa default card göster
+                      return _defaultCard();
                     } else if (snapshot.connectionState ==
                         ConnectionState.waiting) {
                       return const Padding(
@@ -299,6 +400,7 @@ class _CityListScreenState extends State<CityListScreen> {
                     }
                   },
                 ),
+
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -318,7 +420,6 @@ class _CityListScreenState extends State<CityListScreen> {
                           onTap: () {
                             setState(() {
                               if (selectedCity == city) {
-                                // Aynı şehre tekrar tıklanırsa seçimi kaldır
                                 selectedCity = null;
                                 cityWeather = null;
                               } else {
