@@ -139,6 +139,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               'lon': pos.longitude,
               'limit': 1,
               'appid': apiKey,
+              'lang': 'tr',
             },
           );
           debugPrint('OpenWeather reverse resp: ${resp.data}');
@@ -209,7 +210,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
     }
   }
 
-  void selectedCity(String ulke) {
+  void selectedCountry(String ulke) {
     setState(() {
       if (secilenUlke == ulke) {
         // aynı şehre tekrar tıklanırsa seçimi kaldır
@@ -300,12 +301,15 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
           try {
             final weather = await havaDurumu!;
             final countryCode = weather.sys?.country;
+            final countryName = weather.name;
             if (countryCode != null && countryCode.isNotEmpty) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      CityListScreen(countryCode: countryCode),
+                  builder: (context) => CityListScreen(
+                    countryCode: countryCode,
+                    countryName: countryName.toString(),
+                  ),
                 ),
               );
             } else {
@@ -516,7 +520,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                                                     )
                                                   : null,
                                               onTap: () {
-                                                selectedCity(city);
+                                                selectedCountry(city);
                                                 Navigator.of(context).pop();
                                               },
                                             );
@@ -681,7 +685,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                   final isSelected = secilenUlke == ulkeler[index];
 
                   return GestureDetector(
-                    onTap: () => selectedCity(ulkeler[index]),
+                    onTap: () => selectedCountry(ulkeler[index]),
                     child: Card(
                       color: isSelected
                           ? Colors.blueGrey

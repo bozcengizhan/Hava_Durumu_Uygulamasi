@@ -5,7 +5,12 @@ import 'package:hava_durumu_uygulamasi/districtListScreen.dart';
 
 class CityListScreen extends StatefulWidget {
   final String countryCode;
-  const CityListScreen({super.key, required this.countryCode});
+  final String countryName;
+  const CityListScreen({
+    super.key,
+    required this.countryCode,
+    required this.countryName,
+  });
 
   @override
   State<CityListScreen> createState() => _CityListScreenState();
@@ -46,13 +51,24 @@ class _CityListScreenState extends State<CityListScreen> {
           'featureCode': 'PPLA',
           'maxRows': 1000,
           'username': 'bozcengizhan',
+          'lang': 'tr',
         },
       );
+
       final data = response.data['geonames'] as List;
+
       setState(() {
         cities = data
             .map((e) => {'name': e['name'], 'geonameId': e['geonameId']})
             .toList();
+
+        // 🔹 Şehirleri alfabetik sıraya koy
+        cities.sort(
+          (a, b) => (a['name'] as String).toLowerCase().compareTo(
+            (b['name'] as String).toLowerCase(),
+          ),
+        );
+
         isLoading = false;
       });
     } catch (e) {
@@ -224,7 +240,43 @@ class _CityListScreenState extends State<CityListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Şehirler')),
+      appBar: AppBar(
+        title: Text(
+          widget.countryName, // 👈 artık ülke ismi burada
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.normal,
+            shadows: [
+              Shadow(
+                offset: Offset(0, 0),
+                blurRadius: 8,
+                color: Color.fromRGBO(255, 200, 0, 0.18),
+              ),
+              Shadow(
+                offset: Offset(0, 4),
+                blurRadius: 6,
+                color: Color.fromRGBO(0, 0, 0, 0.3),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange, Colors.lightBlueAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
+      ),
+
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -232,7 +284,10 @@ class _CityListScreenState extends State<CityListScreen> {
                 FutureBuilder<WeatherModel>(
                   future: cityWeather,
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (selectedCity == null) {
+                      return _defaultCard(); // Eğer seçim yoksa default card göster
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: CircularProgressIndicator(),
@@ -262,8 +317,14 @@ class _CityListScreenState extends State<CityListScreen> {
                         return GestureDetector(
                           onTap: () {
                             setState(() {
-                              selectedCity = city;
-                              cityWeather = getWeather(city);
+                              if (selectedCity == city) {
+                                // Aynı şehre tekrar tıklanırsa seçimi kaldır
+                                selectedCity = null;
+                                cityWeather = null;
+                              } else {
+                                selectedCity = city;
+                                cityWeather = getWeather(city);
+                              }
                             });
                           },
                           child: Container(

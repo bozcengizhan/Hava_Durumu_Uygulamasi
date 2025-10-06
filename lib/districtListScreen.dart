@@ -45,20 +45,33 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
   String cleanDistrictName(String name) {
     name = name.trim(); // baştaki/sondaki boşlukları temizle
 
-    // Ülke koduna göre ilçeyi ifade eden kelimeler
+    // 🔹 İlçeyi ifade eden kelimeler (sonda olursa sil)
     final suffixes = <String>[
-      ' ilçesi', // Türkiye
-      ' District', // İngilizce konuşulan ülkeler
-      ' Bezirk', // Almanca konuşulan ülkeler
+      ' ilçesi', // Türkçe
+      ' District', // İngilizce
+      ' Bezirk', // Almanca
       ' arrondissement', // Fransızca
       ' Municipio', // İspanyolca / İtalyanca
       ' Comune', // İtalyanca
-      ' Parish', // İngilizce (özellikle Karayipler / Louisiana)
+      ' Parish', // İngilizce (özellikle Karayipler)
     ];
 
+    // 🔹 Başta olursa silinecek kelimeler
+    final prefixes = <String>[
+      'Bashkia', 'Gueltat', 'Daïra de', 'Daïra d’', // Arnavutça: Belediye
+    ];
+
+    // Başta geçen kelimeleri sil
+    for (final prefix in prefixes) {
+      if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
+        name = name.substring(prefix.length).trim();
+      }
+    }
+
+    // Sonda geçen kelimeleri sil
     for (final suffix in suffixes) {
       if (name.toLowerCase().endsWith(suffix.toLowerCase())) {
-        return name.substring(0, name.length - suffix.length).trim();
+        name = name.substring(0, name.length - suffix.length).trim();
       }
     }
 
@@ -76,6 +89,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
           'featureCode': 'ADM2',
           'maxRows': 100,
           'username': 'bozcengizhan',
+          'lang': 'eng',
         },
       );
 
@@ -84,13 +98,14 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
       setState(() {
         districts = data
             .where((e) => e['fcode'] == 'ADM2' || e['fcode'] == 'PPL')
-            .map(
-              (e) => cleanDistrictName(e['name'] as String),
-            ) // "ilçesi" kaldır
+            .map((e) => cleanDistrictName(e['name'] as String))
             .toList();
 
+        // 🔹 Alfabetik sırala
+        districts.sort((a, b) => a.compareTo(b));
+
         if (districts.isEmpty) {
-          districts.add('İlçe bulunamadı'); // boş listede mesaj göster
+          districts.add('İlçe bulunamadı');
         }
 
         isLoading = false;
@@ -243,7 +258,42 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('${widget.cityName} İlçeleri')),
+      appBar: AppBar(
+        title: Text(
+          widget.cityName, // 👈 artık ülke ismi burada
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.normal,
+            shadows: [
+              Shadow(
+                offset: Offset(0, 0),
+                blurRadius: 8,
+                color: Color.fromRGBO(255, 200, 0, 0.18),
+              ),
+              Shadow(
+                offset: Offset(0, 4),
+                blurRadius: 6,
+                color: Color.fromRGBO(0, 0, 0, 0.3),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange, Colors.lightBlueAccent],
+              begin: Alignment.topLeft,
+              end: Alignment.topRight,
+            ),
+          ),
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
+        ),
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
