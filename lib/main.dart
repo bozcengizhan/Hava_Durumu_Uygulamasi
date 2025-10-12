@@ -825,7 +825,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.orange.withOpacity(0.4),
-                              spreadRadius: 10,
+                              spreadRadius: 9,
                               blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),

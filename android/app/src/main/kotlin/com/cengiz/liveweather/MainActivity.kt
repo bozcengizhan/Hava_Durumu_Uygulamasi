@@ -1,4 +1,4 @@
-package com.example.hava_durumu_uygulamasi
+package com.cengiz.liveweather
 
 import io.flutter.embedding.android.FlutterActivity
 
