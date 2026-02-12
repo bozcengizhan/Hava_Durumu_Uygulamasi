@@ -331,7 +331,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
 
       setState(() {
         secilenUlke = city;
-        havaDurumu = getWeather(city!); // <-- city! ile non-null olarak geçir
+        havaDurumu = getWeather(city!);
       });
 
       havaDurumu!
