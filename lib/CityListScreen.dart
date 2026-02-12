@@ -275,7 +275,7 @@ class _CityListScreenState extends State<CityListScreen> {
           BoxShadow(
             color: _getTempColor(temp).withOpacity(0.4),
             spreadRadius: 10,
-            blurRadius: 15,
+            blurRadius: 14,
             offset: const Offset(0, 5),
           ),
         ],
@@ -314,7 +314,7 @@ class _CityListScreenState extends State<CityListScreen> {
                 shadows: [
                   Shadow(
                     offset: Offset(0, 0),
-                    blurRadius: 15,
+                    blurRadius: 14,
                     color: Color.fromRGBO(255, 200, 0, 0.18),
                   ),
                   Shadow(

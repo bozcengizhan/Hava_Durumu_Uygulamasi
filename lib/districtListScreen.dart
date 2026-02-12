@@ -313,7 +313,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: _getTempColor(temp).withOpacity(0.4),
+            color: _getTempColor(temp).withOpacity(0.3),
             spreadRadius: 10,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -335,7 +335,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
               shadows: [
                 Shadow(
                   offset: Offset(0, 0),
-                  blurRadius: 15,
+                  blurRadius: 14,
                   color: Color.fromRGBO(255, 200, 0, 0.18),
                 ),
                 Shadow(
