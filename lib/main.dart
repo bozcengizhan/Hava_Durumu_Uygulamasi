@@ -546,12 +546,12 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               shadows: [
                 Shadow(
                   offset: Offset(0, 0),
-                  blurRadius: 14,
+                  blurRadius: 15,
                   color: Color.fromRGBO(255, 200, 0, 0.18),
                 ),
                 Shadow(
                   offset: Offset(0, 4),
-                  blurRadius: 14,
+                  blurRadius: 15,
                   color: Color.fromRGBO(0, 0, 0, 0.3),
                 ),
               ],
@@ -876,7 +876,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                             BoxShadow(
                               color: Colors.blue.withOpacity(0.3),
                               spreadRadius: 10,
-                              blurRadius: 14,
+                              blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),
                           ],
