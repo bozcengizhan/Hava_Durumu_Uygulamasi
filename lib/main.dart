@@ -655,10 +655,8 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               begin: Alignment.topLeft,
               end: Alignment.topRight,
             ),
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
           ),
-        ),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
       ),
       body: Padding(
