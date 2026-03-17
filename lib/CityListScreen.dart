@@ -643,10 +643,10 @@ class _CityListScreenState extends State<CityListScreen> {
 
                         // AnimatedContainer + transform ile hafifçe büyüme efekti ekledim.
                         return AnimatedContainer(
-                          duration: const Duration(milliseconds: 340),
+                          duration: const Duration(milliseconds: 350),
                           curve: Curves.easeInOut,
                           transform: Matrix4.identity()
-                            ..scale(isSel ? 1.02 : 1.0),
+                            ..scale(isSel ? 1.03 : 1.0),
                           decoration: BoxDecoration(
                             color: targetColor,
                             borderRadius: BorderRadius.circular(12),
