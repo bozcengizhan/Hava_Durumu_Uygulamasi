@@ -551,7 +551,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                 ),
                 Shadow(
                   offset: Offset(0, 4),
-                  blurRadius: 14,
+                  blurRadius: 15,
                   color: Color.fromRGBO(0, 0, 0, 0.3),
                 ),
               ],

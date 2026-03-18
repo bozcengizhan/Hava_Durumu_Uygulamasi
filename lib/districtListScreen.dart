@@ -306,7 +306,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
-      margin: const EdgeInsets.all(15.0),
+      margin: const EdgeInsets.all(16.0),
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: _getTempColor(temp),
