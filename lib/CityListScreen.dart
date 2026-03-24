@@ -660,7 +660,7 @@ class _CityListScreenState extends State<CityListScreen> {
                             ],
                           ),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(11),
+                            borderRadius: BorderRadius.circular(12),
                             onTap: () {
                               setState(() {
                                 if (selectedCityName == city) {
