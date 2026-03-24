@@ -572,7 +572,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
               Column(
                 children: [
                   const Icon(Icons.water_drop),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     '${texts['humidity']?[getDeviceLanguageCode()]}: $humidity%',
                     style: const TextStyle(fontWeight: FontWeight.bold),

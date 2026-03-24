@@ -336,7 +336,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
                 Shadow(
                   offset: Offset(0, 0),
                   blurRadius: 15,
-                  color: Color.fromRGBO(255, 200, 0, 0.18),
+                  color: Color.fromRGBO(254, 200, 0, 0.18),
                 ),
                 Shadow(
                   offset: Offset(0, 4),
