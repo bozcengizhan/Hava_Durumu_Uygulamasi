@@ -649,7 +649,7 @@ class _CityListScreenState extends State<CityListScreen> {
                             ..scale(isSel ? 1.03 : 1.0),
                           decoration: BoxDecoration(
                             color: targetColor,
-                            borderRadius: BorderRadius.circular(11),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),

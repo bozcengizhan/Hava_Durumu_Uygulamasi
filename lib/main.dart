@@ -555,7 +555,7 @@ class __HavaDurumuSayfasiState extends State<_HavaDurumuSayfasi> {
                   color: Color.fromRGBO(0, 0, 0, 0.3),
                 ),
               ],
-              fontSize: 54,
+              fontSize: 55,
               fontWeight: FontWeight.bold,
               fontStyle: FontStyle.italic,
             ),
