@@ -314,7 +314,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
         boxShadow: [
           BoxShadow(
             color: _getTempColor(temp).withOpacity(0.3),
-            spreadRadius: 10,
+            spreadRadius: 11,
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
