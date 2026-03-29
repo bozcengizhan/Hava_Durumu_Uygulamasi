@@ -328,7 +328,7 @@ class _DistrictListScreenState extends State<DistrictListScreen> {
             style: const TextStyle(fontSize: 35, fontWeight: FontWeight.normal),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             tempText + '°C',
             style: const TextStyle(
