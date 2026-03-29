@@ -652,7 +652,7 @@ class _CityListScreenState extends State<CityListScreen> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withOpacity(0.1),
                                 spreadRadius: 3,
                                 blurRadius: 5,
                                 offset: const Offset(0, 0),
