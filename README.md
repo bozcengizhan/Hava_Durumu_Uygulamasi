@@ -35,12 +35,3 @@ Uygulamanın geliştirilmesinde aşağıdaki teknolojiler ve mimariler kullanıl
     * [GeoNames API](https://www.geonames.org/): Coğrafi veri ve şehir listeleme hizmeti.
 
 ---
-
-## 📁 Dosya Yapısı
-
-lib/
-├ Models/
-├ countries
-├ districtListScreen.dart
-├ cityListScreen.dart
-└ main.darta
