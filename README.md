@@ -1,37 +1,37 @@
 # 🌦️ InstantaneousWeather - Live Weather App
 
-**InstantaneousWeather**, Flutter ile geliştirilmiş, kullanıcıların dünya genelindeki şehirlerin hava durumunu anlık olarak takip etmelerini sağlayan, görsel odaklı ve kullanıcı dostu bir mobil uygulamadır. Uygulama, sıcaklık değerlerine göre dinamik olarak renk değiştiren modern arayüzü ile hava durumunu sadece bir sayı olmaktan çıkarıp görsel bir deneyime dönüştürür.
+**InstantaneousWeather** is a visually-driven mobile application developed with Flutter that allows users to track real-time weather data for cities worldwide. By blending data from multiple APIs, the app transforms weather information from simple numbers into an immersive experience with a dynamic UI that changes color based on temperature.
 
 ---
 
-## 🚀 Uygulamayı Deneyimleyin
-Uygulama şu an **Google Play Store** üzerinde yayındadır. Özellikleri ve ekran görüntülerini mağaza sayfası üzerinden inceleyebilirsiniz:
+## 🚀 Experience the App
+The application is currently live on the **Google Play Store**. You can check out the features, performance, and screenshots on the store page:
 
-👉 **[Google Play Store'da Görüntüle](https://play.google.com/store/apps/details?id=com.cengiz.liveweather)**
-
----
-
-## ✨ Özellikler
-
-- **🌍 Küresel Şehir Listeleme:** GeoNames API entegrasyonu ile seçilen ülkedeki tüm önemli şehir merkezlerini otomatik olarak listeler.
-- **🌡️ Dinamik Renk Paleti:** Sıcaklık değerlerine göre (Sıcak, Ilık, Serin, Soğuk) arka plan ve kart renkleri anlık olarak değişir.
-- **🔍 Akıllı Arama ve Filtreleme:** Şehirler arasında hızlıca arama yapabilir ve istediğiniz konumu bulabilirsiniz.
-- **📊 Detaylı Meteoroloji:** Sadece sıcaklık değil; nem oranı ve rüzgar hızı gibi kritik verileri sunar.
-- **🌐 Çok Dil Desteği:** TR, EN, DE ve FR dillerini destekleyerek cihaz diline göre otomatik uyum sağlar.
-- **⚡ Performans Odaklı:** API istekleri için optimize edilmiş `Dio` mimarisi ve akıllı veri çekme (throttling) mekanizması.
+👉 **[View on Google Play Store](https://play.google.com/store/apps/details?id=com.cengiz.liveweather)**
 
 ---
 
-## 🛠️ Teknik Altyapı
+## ✨ Key Features
 
-Uygulamanın geliştirilmesinde aşağıdaki teknolojiler ve mimariler kullanılmıştır:
+- **🌍 Global City Discovery:** Automatically lists major city centers for any selected country using the GeoNames API integration.
+- **🎨 Dynamic Visual Feedback:** The background and card colors transition smoothly based on temperature (Hot, Warm, Cool, Cold) using `AnimatedContainer`.
+- **🔍 Smart Search & Filter:** Quickly find any city among thousands of entries with an optimized search modal.
+- **📊 Comprehensive Meteorology:** Detailed insights including humidity levels, wind speed, and weather descriptions.
+- **🌐 Multilingual Support:** Supports English, Turkish, German, and French, automatically adapting to the device's system language.
+- **⚡ Optimized Performance:** Features smart API throttling (350ms delays) and efficient JSON parsing to stay within rate limits and ensure smooth scrolling.
+
+---
+
+## 🛠️ Technical Stack
+
+Built with modern mobile development standards:
 
 * **Framework:** [Flutter](https://flutter.dev/)
-* **Programlama Dili:** [Dart](https://dart.dev/)
-* **Networking:** [Dio](https://pub.dev/packages/dio) (API istekleri ve JSON yönetimi için)
-* **State Management:** State-bound UI components (Clean Code prensiplerine uygun mimari)
-* **API Entegrasyonları:**
-    * [OpenWeatherMap API](https://openweathermap.org/api): Gerçek zamanlı hava durumu verileri.
-    * [GeoNames API](https://www.geonames.org/): Coğrafi veri ve şehir listeleme hizmeti.
+* **Language:** [Dart](https://dart.dev/)
+* **Networking:** [Dio](https://pub.dev/packages/dio) (For advanced REST API requests and configuration)
+* **State Management:** Reactive state handling with `StatefulWidget` and clean architectural separation.
+* **APIs Integrated:**
+    * [OpenWeatherMap API](https://openweathermap.org/api): Real-time meteorological data.
+    * [GeoNames API](https://www.geonames.org/): Geographical database and city listing service.
 
 ---
