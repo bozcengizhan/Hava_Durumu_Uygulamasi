@@ -1,6 +1,6 @@
-# 🌦️ InstantaneousWeather - Live Weather App
+# 🌦️ LiveWeather – Real-Time Weather Updates
 
-**InstantaneousWeather** is a visually-driven mobile application developed with Flutter that allows users to track real-time weather data for cities worldwide. By blending data from multiple APIs, the app transforms weather information from simple numbers into an immersive experience with a dynamic UI that changes color based on temperature.
+Stay prepared for every day with **LiveWeather**, your simple and reliable weather app! LiveWeather provides accurate, real-time weather updates for your city or current location. No more guessing the weather—get instant temperature, humidity, wind speed, and weather conditions with just a few taps.
 
 ---
 
@@ -42,17 +42,17 @@ Built with modern mobile development standards:
    
 - git clone [https://github.com/bozcengizhan/Hava_Durumu_Uygulamasi.git](https://github.com/bozcengizhan/Hava_Durumu_Uygulamasi.git)
 
-2. Firebase Configuration
+2. Navigate to the project directory:
    
-- Create a project in Firebase Console.
-- Add an Android app with package name: com.bozcengizhan.livechat
-- Download google-services.json and place it in the app/ folder.
-- Enable Authentication (Email & Google), Realtime Database, and Storage in your Firebase console.
+- cd Hava_Durumu_Uygulamasi
 
-3. Build & Run
+3. Install dependencies:
    
-- Open the project with Android Studio (Ladybug or newer).
-- Sync Gradle and click the Run button.
+- flutter pub get
+
+4. Run the application:
+
+- flutter run
 
 ### License
 Distributed under the MIT License. See LICENSE for more information.
