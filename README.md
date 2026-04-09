@@ -7,7 +7,9 @@ Stay prepared for every day with **LiveWeather**, your simple and reliable weath
 ## 🚀 Experience the App
 The application is currently live on the **Google Play Store**. You can check out the features, performance, and screenshots on the store page:
 
-👉 **[View on Google Play Store](https://play.google.com/store/apps/details?id=com.cengiz.liveweather)**
+👉 [![Google Play Badge](https://img.shields.io/badge/Google_Play-Get_it_on-green?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.cengiz.liveweather)
+
+ **[View on Google Play Store](https://play.google.com/store/apps/details?id=com.cengiz.liveweather)**
 
 ---
 
