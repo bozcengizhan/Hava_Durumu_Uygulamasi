@@ -35,3 +35,24 @@ Built with modern mobile development standards:
     * [GeoNames API](https://www.geonames.org/): Geographical database and city listing service.
 
 ---
+
+### Installation
+
+1. **Clone the repository:**
+   
+- git clone [https://github.com/bozcengizhan/LiveChat.git](https://github.com/bozcengizhan/InstantaneousWeather.git)
+
+2. Firebase Configuration
+   
+- Create a project in Firebase Console.
+- Add an Android app with package name: com.bozcengizhan.livechat
+- Download google-services.json and place it in the app/ folder.
+- Enable Authentication (Email & Google), Realtime Database, and Storage in your Firebase console.
+
+3. Build & Run
+   
+- Open the project with Android Studio (Ladybug or newer).
+- Sync Gradle and click the Run button.
+
+### License
+Distributed under the MIT License. See LICENSE for more information.
