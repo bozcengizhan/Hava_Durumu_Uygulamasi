@@ -40,7 +40,7 @@ Built with modern mobile development standards:
 
 1. **Clone the repository:**
    
-- git clone [https://github.com/bozcengizhan/LiveChat.git](https://github.com/bozcengizhan/InstantaneousWeather.git)
+- git clone [https://github.com/bozcengizhan/Hava_Durumu_Uygulamasi.git](https://github.com/bozcengizhan/Hava_Durumu_Uygulamasi.git)
 
 2. Firebase Configuration
    
